@@ -1,0 +1,63 @@
+name: wellnesshub
+description: "WellnessHub Flutter App – AI Lifestyle, Wellness & Spirituality Companion"
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.9.2 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # --- Audio & Media ---
+  audioplayers: ^5.2.1
+  image_picker: ^0.8.7+4
+
+  # --- Notifications ---
+  flutter_local_notifications: ^17.2.1
+
+  # --- Charts & UI ---
+  intl: ^0.18.0
+  shared_preferences: ^2.1.1
+  fl_chart: ^0.68.0
+  lottie: ^3.1.0
+  flutter_svg: ^2.0.10
+  animations: ^2.0.10
+  cupertino_icons: ^1.0.8
+  provider: ^6.1.2
+
+  # --- Firebase ---
+  firebase_core: ^3.6.0
+  firebase_auth: ^5.3.2
+  cloud_firestore: ^5.4.4
+  firebase_storage: ^12.4.10
+  firebase_analytics: ^11.3.2
+  firebase_messaging: ^15.1.1
+
+  # --- Device Features ---
+  camera: ^0.11.0
+  speech_to_text: ^6.6.0
+  text_to_speech: ^0.2.3
+  url_launcher: ^6.3.0
+
+  # --- Utilities ---
+  http: ^1.2.2
+  path_provider: ^2.1.4
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/music/
+    - assets/books/
+    - assets/images/
+    - assets/lottie/
+    - assets/icons/
+    - assets/fonts/

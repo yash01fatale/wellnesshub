@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "644773851267",
+    "project_id": "wellnesshub-6bf0b",
+    "storage_bucket": "wellnesshub-6bf0b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:644773851267:android:194909340675d203cdebb6",
+        "android_client_info": {
+          "package_name": "com.example.wellnesshub"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "644773851267-3uf0291bll6884klpec24m07drskgdmv.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBEHsRGz8E39vTnTDiwOKTk-EGeTUMP8JY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "644773851267-3uf0291bll6884klpec24m07drskgdmv.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "644773851267-t3h0kbfhlpd6hsv2ho7p6vsfm3kqd63c.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.wellnesshub"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
