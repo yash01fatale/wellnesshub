@@ -174,7 +174,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _actionRow(BuildContext context, bool isWide) {
     // Use icon buttons with labels — tappable
     final btnStyle = ElevatedButton.styleFrom(
-      backgroundColor: Colors.deepPurple,
+      backgroundColor: const Color.fromARGB(255, 187, 81, 230),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
     );
@@ -520,7 +520,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: Text(completed ? "Completed" : "Join"),
               ),
             );
-          }).toList(),
+          }),
         ]),
       ),
     );

@@ -184,7 +184,7 @@ class _SleepScreenState extends State<SleepScreen> {
                     ),
                   ),
                 )
-                .toList(),
+                ,
 
             const SizedBox(height: 25),
 
@@ -213,7 +213,7 @@ class _SleepScreenState extends State<SleepScreen> {
                       : () {},
                 ),
               );
-            }).toList(),
+            }),
           ],
         ),
       ),

@@ -7,7 +7,6 @@ import 'firebase_options.dart';
 
 // Screens
 import 'screens/login_screen.dart';
-import 'screens/signup_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/nutrition_screen.dart';
 import 'screens/fitness_screen.dart';

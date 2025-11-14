@@ -206,7 +206,7 @@ class _MentalScreenState extends State<MentalScreen> {
         return MoodInsight(
           title: "I hear you — a short step can help",
           detail:
-              "You reported ${entry.mood}.${fromNote} Try a 5-minute breathing exercise or a short journaling prompt to process this.",
+              "You reported ${entry.mood}.$fromNote Try a 5-minute breathing exercise or a short journaling prompt to process this.",
           recommendedTask: cbtTasks[2],
         );
       }
