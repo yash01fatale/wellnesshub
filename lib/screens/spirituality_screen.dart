@@ -240,9 +240,7 @@ class _SpiritualityScreenState extends State<SpiritualityScreen>
     _breathController.animateTo(to);
   }
 
-  // -------------------------------------------------
   // MEDITATION TIMER
-  // -------------------------------------------------
   void _startMeditationTimer(int seconds) {
     _meditationSecondsRemaining = seconds;
     _meditationRunning = true;
