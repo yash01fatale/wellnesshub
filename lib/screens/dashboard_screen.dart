@@ -1,15 +1,22 @@
 // lib/screens/dashboard_screen.dart
 import 'dart:async';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+
+// Local imports - ensure these screens exist in your project
 import 'login_screen.dart';
 import 'profile_screen.dart';
 import 'habit_tracker_screen.dart';
 import 'daily_stats_screen.dart';
 import 'ai_chat_screen.dart';
+import 'nutrition_screen.dart';
+import 'fitness_screen.dart';
+import 'sleep_screen.dart';
+import 'mental_screen.dart';
+import 'spirituality_screen.dart';
+import 'habits_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -22,6 +29,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
   String userName = "User";
   bool loadingUser = true;
   StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? _userSub;
+
+  // Demo "AI" values (replace with real model outputs later)
+  double moodScore = 0.78; // 0..1
+  double stressScore = 0.35; // 0..1 (lower = better)
+  double sleepRecovery = 0.72;
+  double focusScore = 0.6;
+  double spiritualEnergy = 0.65;
+
+  final List<Map<String, String>> _activePlans = [
+    {"title": "7-Day Fitness", "subtitle": "Cardio + Strength", "screen": "fitness"},
+    {"title": "Budget Diet", "subtitle": "Vegetarian - Moderate", "screen": "nutrition"},
+    {"title": "Sleep Ritual", "subtitle": "Bedtime routine", "screen": "sleep"},
+  ];
 
   @override
   void initState() {
@@ -38,14 +58,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void _subscribeToUserDoc() {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
-      // No logged-in user — stop loading and do nothing
       if (mounted) setState(() => loadingUser = false);
       return;
     }
 
     try {
       final docRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
-      // realtime listener - updates UI whenever profile changes
       _userSub = docRef.snapshots().listen((snapshot) {
         if (!mounted) return;
         if (snapshot.exists) {
@@ -55,7 +73,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
             loadingUser = false;
           });
         } else {
-          // document missing -> show default name but stop loading
           setState(() {
             userName = 'User';
             loadingUser = false;
@@ -72,10 +89,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Future<void> _logout() async {
     await FirebaseAuth.instance.signOut();
     if (!mounted) return;
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (_) => const LoginScreen()),
-    );
+    Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
   }
 
   String getGreeting() {
@@ -86,13 +100,50 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> _onRefresh() async {
-    // manual refresh: re-subscribe quickly to force update
     _userSub?.cancel();
     if (mounted) setState(() => loadingUser = true);
     await Future.delayed(const Duration(milliseconds: 200));
     _subscribeToUserDoc();
-    // small delay for UX
     await Future.delayed(const Duration(milliseconds: 300));
+  }
+
+  // Helper to navigate to a screen by name
+  void _openScreenByKey(String key) {
+    switch (key) {
+      case "profile":
+        Navigator.push(context, MaterialPageRoute(builder: (_) => const ProfileScreen()));
+        break;
+      case "habits":
+        Navigator.push(context, MaterialPageRoute(builder: (_) => const HabitTrackerScreen()));
+        break;
+      case "today":
+        Navigator.push(context, MaterialPageRoute(builder: (_) => const DailyStatsScreen()));
+        break;
+      case "assistant":
+        Navigator.push(context, MaterialPageRoute(builder: (_) => const AIChatScreen()));
+        break;
+      case "nutrition":
+        Navigator.push(context, MaterialPageRoute(builder: (_) => const NutritionScreen()));
+        break;
+      case "fitness":
+        Navigator.push(context, MaterialPageRoute(builder: (_) => const FitnessScreen()));
+        break;
+      case "sleep":
+        Navigator.push(context, MaterialPageRoute(builder: (_) => const SleepScreen()));
+        break;
+      case "mental":
+        Navigator.push(context, MaterialPageRoute(builder: (_) => const MentalScreen()));
+        break;
+      case "spiritual":
+        Navigator.push(context, MaterialPageRoute(builder: (_) => const SpiritualityScreen()));
+        break;
+      case "habits_list":
+        Navigator.push(context, MaterialPageRoute(builder: (_) => const HabitsScreen()));
+        break;
+      default:
+        // fallback - open assistant
+        Navigator.push(context, MaterialPageRoute(builder: (_) => const AIChatScreen()));
+    }
   }
 
   @override
@@ -100,289 +151,297 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        title: const Text("WellnessHub Dashboard"),
+        title: const Text("WellnessHub — Co-Pilot"),
         backgroundColor: Colors.deepPurple,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            tooltip: 'Refresh',
-            onPressed: () => _onRefresh(),
-          ),
-          IconButton(
-            icon: const Icon(Icons.logout),
-            tooltip: 'Logout',
-            onPressed: _logout,
-          )
+          IconButton(icon: const Icon(Icons.refresh), tooltip: 'Refresh', onPressed: _onRefresh),
+          IconButton(icon: const Icon(Icons.person), tooltip: 'Profile', onPressed: () => _openScreenByKey("profile")),
+          IconButton(icon: const Icon(Icons.logout), tooltip: 'Logout', onPressed: _logout),
         ],
         elevation: 0,
       ),
       body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 300),
+        duration: const Duration(milliseconds: 250),
         child: loadingUser
             ? const Center(key: ValueKey('loading'), child: CircularProgressIndicator())
-            : RefreshIndicator(
-                key: const ValueKey('content'),
-                onRefresh: _onRefresh,
-                child: LayoutBuilder(builder: (context, constraints) {
-                  final width = constraints.maxWidth;
-                  final isWide = width > 800; // breakpoint for responsive layout
-
-                  return SingleChildScrollView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _welcomeSection(userName, getGreeting()),
-
-                        const SizedBox(height: 20),
-
-                        // Action row — quick navigation buttons
-                        _actionRow(context, isWide),
-
-                        const SizedBox(height: 20),
-
-                        // Grid or Column for cards
-                        isWide ? _twoColumnGrid() : Column(
-                          children: [
-                            _quickHealthOverview(),
-                            const SizedBox(height: 20),
-                            _weeklyHealthChart(),
-                            const SizedBox(height: 20),
-                            _mindBodyCards(),
-                            const SizedBox(height: 20),
-                            _nutritionTipCard(),
-                            const SizedBox(height: 20),
-                            _aiHealthAssistant(),
-                            const SizedBox(height: 20),
-                            _habitTracker(),
-                            const SizedBox(height: 20),
-                            _communitySection(),
-                          ],
-                        ),
-
-                        const SizedBox(height: 40),
-                      ],
-                    ),
-                  );
-                }),
-              ),
+            : _buildContent(context),
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => _openScreenByKey("assistant"),
+        label: const Text("Ask AI Coach"),
+        icon: const Icon(Icons.smart_toy),
+        backgroundColor: const Color(0xFF6A1B9A),
       ),
     );
   }
 
-  Widget _actionRow(BuildContext context, bool isWide) {
-    // Use icon buttons with labels — tappable
-    final btnStyle = ElevatedButton.styleFrom(
-      backgroundColor: const Color.fromARGB(255, 187, 81, 230),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-    );
+  Widget _buildContent(BuildContext context) {
+    return LayoutBuilder(builder: (context, constraints) {
+      final width = constraints.maxWidth;
+      final isWide = width > 900;
 
-    // keep consistent spacing for narrow/wide
-    return Wrap(
-      spacing: 12,
-      runSpacing: 12,
-      children: [
-        ElevatedButton.icon(
-          style: btnStyle,
-          onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ProfileScreen())),
-          icon: const Icon(Icons.person_outline),
-          label: const Text("Profile"),
-        ),
-        ElevatedButton.icon(
-          style: btnStyle,
-          onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const HabitTrackerScreen())),
-          icon: const Icon(Icons.checklist_rounded),
-          label: const Text("Habits"),
-        ),
-        ElevatedButton.icon(
-          style: btnStyle,
-          onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const DailyStatsScreen())),
-          icon: const Icon(Icons.bar_chart),
-          label: const Text("Today"),
-        ),
-        ElevatedButton.icon(
-          style: btnStyle,
-          onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AIChatScreen())),
-          icon: const Icon(Icons.smart_toy),
-          label: const Text("Assistant"),
-        ),
-      ],
-    );
-  }
-
-  Widget _twoColumnGrid() {
-    // Layout for wide screens: left column big, right column stacked cards
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Left column (main content)
-        Expanded(
-          flex: 2,
-          child: Column(
-            children: [
-              _quickHealthOverview(),
+      return RefreshIndicator(
+        onRefresh: _onRefresh,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(16),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: MediaQuery.of(context).size.height - kToolbarHeight - 24),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              _buildTopSummaryCard(),
+              const SizedBox(height: 16),
+              _buildRecommendationsRow(),
               const SizedBox(height: 20),
-              _weeklyHealthChart(),
-              const SizedBox(height: 20),
-              _mindBodyCards(),
-            ],
+              isWide ? _buildWideBody() : _buildNarrowBody(),
+              const SizedBox(height: 40),
+            ]),
           ),
         ),
-
-        const SizedBox(width: 18),
-
-        // Right column (side content)
-        Expanded(
-          flex: 1,
-          child: Column(
-            children: [
-              _nutritionTipCard(),
-              const SizedBox(height: 16),
-              _aiHealthAssistant(),
-              const SizedBox(height: 16),
-              _habitTracker(),
-              const SizedBox(height: 16),
-              _communitySection(),
-            ],
-          ),
-        )
-      ],
-    );
+      );
+    });
   }
 
-  Widget _welcomeSection(String name, String greet) {
+  Widget _buildTopSummaryCard() {
+    // Big AI Daily Summary
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF6A1B9A), Color(0xFF8E24AA)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
+        gradient: const LinearGradient(colors: [Color(0xFF6A1B9A), Color(0xFF8E24AA)]),
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [BoxShadow(color: Colors.deepPurple.withOpacity(0.12), blurRadius: 8)],
       ),
-      padding: const EdgeInsets.all(20),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(
-                "$greet, $name 👋",
-                style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              const Text("Your daily health summary is ready!", style: TextStyle(color: Colors.white70, fontSize: 14)),
+      padding: const EdgeInsets.all(18),
+      child: Row(children: [
+        Expanded(
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text("${getGreeting()}, $userName", style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 6),
+            const Text("Here's your AI-powered daily brief", style: TextStyle(color: Colors.white70)),
+            const SizedBox(height: 12),
+            Wrap(spacing: 8, runSpacing: 8, children: [
+              _miniChip("Mood: ${(moodScore * 100).round()}%"),
+              _miniChip("Stress: ${(100 - (stressScore * 100)).round()}%"),
+              _miniChip("Sleep: ${(sleepRecovery * 100).round()}%"),
+              _miniChip("Focus: ${(focusScore * 100).round()}%"),
+              _miniChip("Spirit: ${(spiritualEnergy * 100).round()}%"),
             ]),
-          ),
-          const Icon(Icons.health_and_safety_rounded, color: Colors.white, size: 58),
-        ],
+          ]),
+        ),
+
+        // Quick rings summary to the right
+        SizedBox(
+          width: 140,
+          child: Column(children: [
+            _smallRing("Mind", moodScore),
+            const SizedBox(height: 8),
+            _smallRing("Body", sleepRecovery),
+          ]),
+        ),
+      ]),
+    );
+  }
+
+  Widget _miniChip(String text) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 10),
+      decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(12)),
+      child: Text(text, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+    );
+  }
+
+  Widget _smallRing(String label, double percent) {
+    return Column(children: [
+      Stack(alignment: Alignment.center, children: [
+        SizedBox(
+          width: 72,
+          height: 72,
+          child: CircularProgressIndicator(value: percent, strokeWidth: 7, color: Colors.white),
+        ),
+        Text("${(percent * 100).round()}%", style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+      ]),
+      const SizedBox(height: 6),
+      Text(label, style: const TextStyle(color: Colors.white70)),
+    ]);
+  }
+
+  Widget _buildRecommendationsRow() {
+    // 3 cards with quick suggestions. Tapping will navigate to related screens
+    final List<Map<String, dynamic>> recs = [
+      {"title": "Nutrition", "msg": "Try a high-fiber breakfast", "action": () => _openScreenByKey("nutrition"), "color": Colors.orange},
+      {"title": "Mind", "msg": "5 min breathing to reduce stress", "action": () => _openScreenByKey("mental"), "color": Colors.indigo},
+      {"title": "Move", "msg": "Short HIIT — 10 min", "action": () => _openScreenByKey("fitness"), "color": Colors.green},
+    ];
+
+    return SizedBox(
+      height: 110,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: recs.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 12),
+        itemBuilder: (context, i) {
+          final r = recs[i];
+          return GestureDetector(
+            onTap: r["action"] as VoidCallback,
+            child: Container(
+              width: 250,
+              decoration: BoxDecoration(color: r["color"].withOpacity(0.12), borderRadius: BorderRadius.circular(12)),
+              padding: const EdgeInsets.all(12),
+              child: Row(children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(color: r["color"], borderRadius: BorderRadius.circular(10)),
+                  child: Icon(i == 0 ? Icons.restaurant : (i == 1 ? Icons.self_improvement : Icons.fitness_center), color: Colors.white),
+                ),
+                const SizedBox(width: 12),
+                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.center, children: [
+                  Text(r["title"], style: const TextStyle(fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 6),
+                  Text(r["msg"], style: const TextStyle(fontSize: 12, color: Colors.black87)),
+                ])),
+              ]),
+            ),
+          );
+        },
       ),
     );
   }
 
-  // =========================
-  // Below: Cards and widgets
-  // =========================
+  Widget _buildWideBody() {
+    // Two-column layout for large screens
+    return Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Expanded(flex: 2, child: Column(children: [
+        _buildWellnessRingsCard(),
+        const SizedBox(height: 16),
+        _buildActivePlansCard(),
+        const SizedBox(height: 16),
+        _weeklyChartCard(),
+      ])),
+      const SizedBox(width: 16),
+      Expanded(flex: 1, child: Column(children: [
+        _habitStreaksCard(),
+        const SizedBox(height: 16),
+        _dailyStatsCard(),
+        const SizedBox(height: 16),
+        _communityCard(),
+      ])),
+    ]);
+  }
 
-  static Widget _quickHealthOverview() {
-    // Responsive two-by-two cards using Wrap
+  Widget _buildNarrowBody() {
+    // Single column for mobile
+    return Column(children: [
+      _buildWellnessRingsCard(),
+      const SizedBox(height: 12),
+      _buildActivePlansCard(),
+      const SizedBox(height: 12),
+      _habitStreaksCard(),
+      const SizedBox(height: 12),
+      _weeklyChartCard(),
+      const SizedBox(height: 12),
+      _dailyStatsCard(),
+      const SizedBox(height: 12),
+      _communityCard(),
+    ]);
+  }
+
+  Widget _buildWellnessRingsCard() {
+    // Larger rings: Mind / Body / Soul / Focus
+    final rings = [
+      {"label": "Mind", "value": moodScore, "color": Colors.purple},
+      {"label": "Body", "value": sleepRecovery, "color": Colors.teal},
+      {"label": "Soul", "value": spiritualEnergy, "color": Colors.deepPurple},
+      {"label": "Focus", "value": focusScore, "color": Colors.orange},
+    ];
+
     return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      elevation: 3,
       child: Padding(
         padding: const EdgeInsets.all(12),
-        child: Wrap(
-          spacing: 12,
-          runSpacing: 12,
-          children: [
-            _buildSmallInfoCard("Heart Rate", "78 bpm", Icons.favorite, Colors.redAccent),
-            _buildSmallInfoCard("Steps", "6,542", Icons.directions_walk, Colors.orange),
-            _buildSmallInfoCard("Calories", "1,850", Icons.local_fire_department, Colors.teal),
-            _buildSmallInfoCard("Sleep", "7h 20m", Icons.bedtime, Colors.indigo),
-          ],
-        ),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          const Text("Wellness Rings", style: TextStyle(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 12),
+          Wrap(spacing: 12, runSpacing: 12, children: rings.map((r) {
+            return _ringCard(r['label'] as String, r['value'] as double, r['color'] as Color);
+          }).toList()),
+        ]),
       ),
     );
   }
 
-  static Widget _buildSmallInfoCard(String title, String value, IconData icon, Color color) {
+  Widget _ringCard(String title, double percent, Color color) {
     return SizedBox(
       width: 160,
       child: Card(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         elevation: 1,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
           child: Column(children: [
-            Row(children: [
-              Icon(icon, color: color, size: 26),
-              const SizedBox(width: 8),
-              Text(title, style: const TextStyle(fontSize: 12, color: Colors.black54)),
+            Stack(alignment: Alignment.center, children: [
+              SizedBox(
+                width: 84,
+                height: 84,
+                child: CircularProgressIndicator(value: percent, strokeWidth: 8, color: color),
+              ),
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text("${(percent * 100).round()}%", style: const TextStyle(fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 4),
+                  Text(title, style: const TextStyle(fontSize: 12, color: Colors.black54)),
+                ],
+              )
             ]),
             const SizedBox(height: 10),
-            Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+            LinearProgressIndicator(value: percent, color: color, backgroundColor: color.withOpacity(0.12)),
           ]),
         ),
       ),
     );
   }
 
-  static Widget _weeklyHealthChart() {
+  Widget _buildActivePlansCard() {
     return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: 2,
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Text("Weekly Health Overview", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          Row(children: const [Icon(Icons.play_circle_outline), SizedBox(width: 8), Text("Active Plans", style: TextStyle(fontWeight: FontWeight.bold))]),
           const SizedBox(height: 12),
           SizedBox(
-            height: 180,
-            child: LineChart(
-              LineChartData(
-                gridData: FlGridData(show: false),
-                titlesData: FlTitlesData(
-                  leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: true, reservedSize: 28)),
-                  bottomTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      getTitlesWidget: (value, meta) {
-                        const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-                        final idx = value.toInt();
-                        if (idx >= 0 && idx < days.length) {
-                          return Padding(
-                            padding: const EdgeInsets.only(top: 6.0),
-                            child: Text(days[idx], style: const TextStyle(fontSize: 10)),
-                          );
-                        }
-                        return const SizedBox.shrink();
-                      },
-                    ),
+            height: 120,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: _activePlans.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 12),
+              itemBuilder: (context, i) {
+                final p = _activePlans[i];
+                return GestureDetector(
+                  onTap: () {
+                    // navigate depending on plan key
+                    _openScreenByKey(p['screen']!);
+                  },
+                  child: Container(
+                    width: 220,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), boxShadow: [
+                      BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 8)
+                    ]),
+                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      Text(p['title']!, style: const TextStyle(fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 6),
+                      Text(p['subtitle']!, style: const TextStyle(color: Colors.black54)),
+                      const Spacer(),
+                      Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                        ElevatedButton(onPressed: () => _openScreenByKey(p['screen']!), child: const Text("Open")),
+                        const Text("3/7", style: TextStyle(color: Colors.black54)), // progress placeholder
+                      ])
+                    ]),
                   ),
-                ),
-                borderData: FlBorderData(show: false),
-                minY: 0,
-                maxY: 8,
-                lineBarsData: [
-                  LineChartBarData(
-                    spots: const [
-                      FlSpot(0, 4),
-                      FlSpot(1, 5.2),
-                      FlSpot(2, 4.8),
-                      FlSpot(3, 6),
-                      FlSpot(4, 7.2),
-                      FlSpot(5, 6.8),
-                      FlSpot(6, 7.5)
-                    ],
-                    isCurved: true,
-                    color: Colors.deepPurple,
-                    belowBarData: BarAreaData(show: true, color: Colors.deepPurpleAccent.withOpacity(0.12)),
-                    dotData: FlDotData(show: true),
-                  )
-                ],
-              ),
+                );
+              },
             ),
           ),
         ]),
@@ -390,162 +449,138 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  static Widget _mindBodyCards() {
-    return Row(
-      children: [
-        Expanded(
-          child: _buildWellnessCard(
-              title: "Meditation",
-              desc: "15 min mindfulness session",
-              buttonText: "Start",
-              color: Colors.purple,
-              icon: Icons.self_improvement),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: _buildWellnessCard(
-              title: "Workout Plan",
-              desc: "Custom daily exercises",
-              buttonText: "View",
-              color: Colors.green,
-              icon: Icons.fitness_center),
-        ),
-      ],
-    );
-  }
-
-  static Widget _nutritionTipCard() {
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Row(children: const [
-          Icon(Icons.restaurant_menu, color: Colors.deepOrange, size: 56),
-          SizedBox(width: 12),
-          Expanded(
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text("Nutrition Tip 🍎", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-              SizedBox(height: 8),
-              Text("Add more fiber-rich foods to your diet — they help digestion and energy levels!", style: TextStyle(color: Colors.black87)),
-            ]),
-          )
-        ]),
-      ),
-    );
-  }
-
-  static Widget _aiHealthAssistant() {
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      color: Colors.deepPurple[50],
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Row(children: const [
-          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text("Your AI Health Assistant 🤖", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.deepPurple)),
-            SizedBox(height: 8),
-            Text("Ask me anything about your health goals, workouts, or nutrition plans.", style: TextStyle(color: Colors.black87)),
-          ])),
-          Icon(Icons.smart_toy, color: Colors.deepPurple, size: 48),
-        ]),
-      ),
-    );
-  }
-
-  static Widget _habitTracker() {
-    final Map<String, Map<String, dynamic>> dummyHabits = {
-      'Drink Water': {'streak': 3, 'completedToday': false},
-      'Morning Walk': {'streak': 5, 'completedToday': true},
-      'Read Book': {'streak': 2, 'completedToday': false},
-    };
-
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      elevation: 3,
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Text("Habit Tracker 🗓️", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 12),
-          Column(children: dummyHabits.keys.map<Widget>((habit) {
-            final data = dummyHabits[habit]!;
-            final bool completed = data['completedToday'];
-            final int streak = data['streak'];
-            return ListTile(
-              leading: CircleAvatar(
-                backgroundColor: completed ? Colors.deepPurple : Colors.grey[300],
-                child: completed ? const Icon(Icons.check, color: Colors.white) : null,
-              ),
-              title: Text(habit),
-              subtitle: Text("Streak: $streak days"),
-              trailing: ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: completed ? Colors.green : Colors.deepPurple),
-                onPressed: () {},
-                child: Text(completed ? "Done" : "Mark"),
-              ),
-            );
-          }).toList()),
-        ]),
-      ),
-    );
-  }
-
-  static Widget _communitySection() {
-    final List<Map<String, Object>> dummyChallenges = [
-      {'title': "10k Steps Challenge", 'description': "Walk 10,000 steps daily", 'participants': 23, 'completed': true},
-      {'title': "No Sugar Week", 'description': "Avoid sugar for 7 days", 'participants': 12, 'completed': false},
+  Widget _habitStreaksCard() {
+    // Demo top habit streaks
+    final streaks = [
+      {"habit": "Drink Water", "streak": 12},
+      {"habit": "Meditation", "streak": 8},
+      {"habit": "No Sugar", "streak": 4},
     ];
 
     return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      color: Colors.deepPurple[50],
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      elevation: 2,
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Text("Community Challenges 🤝", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.deepPurple)),
-          const SizedBox(height: 12),
-          ...dummyChallenges.map((challenge) {
-            final bool completed = challenge['completed'] as bool;
-            final String title = challenge['title'] as String;
-            final String description = challenge['description'] as String;
-            final int participants = challenge['participants'] as int;
+          Row(children: const [Icon(Icons.star), SizedBox(width: 8), Text("Habit Streaks", style: TextStyle(fontWeight: FontWeight.bold))]),
+          const SizedBox(height: 8),
+          ...streaks.map((s) => ListTile(
+  dense: true,
+  contentPadding: EdgeInsets.zero,
+  leading: CircleAvatar(
+      child: Text((s['streak'] as int).toString()),
+      backgroundColor: Colors.deepPurple.shade50),
+  title: Text(s['habit'] as String),
+  trailing: ElevatedButton(
+      onPressed: () => _openScreenByKey("habits"),
+      child: const Text("View")),
+)),
 
-            return ListTile(
-              title: Text(title),
-              subtitle: Text("$description\nParticipants: $participants"),
-              trailing: ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: completed ? Colors.green : Colors.deepPurple),
-                onPressed: () {},
-                child: Text(completed ? "Completed" : "Join"),
-              ),
-            );
-          }),
+          const SizedBox(height: 4),
+          TextButton(onPressed: () => _openScreenByKey("habits_list"), child: const Text("Manage habits")),
         ]),
       ),
     );
   }
 
-  static Widget _buildWellnessCard({
-    required String title,
-    required String desc,
-    required String buttonText,
-    required Color color,
-    required IconData icon,
-  }) {
+  Widget _weeklyChartCard() {
+    // Reuse fl_chart (simple mock)
     return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      elevation: 3,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      elevation: 2,
       child: Padding(
         padding: const EdgeInsets.all(12),
-        child: Column(children: [
-          Icon(icon, color: color, size: 48),
-          const SizedBox(height: 10),
-          Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 6),
-          Text(desc, textAlign: TextAlign.center, style: const TextStyle(fontSize: 12)),
-          const SizedBox(height: 10),
-          ElevatedButton(style: ElevatedButton.styleFrom(backgroundColor: color), onPressed: () {}, child: Text(buttonText)),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          const Text("Weekly Activity", style: TextStyle(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 12),
+          SizedBox(height: 140, child: LineChart(LineChartData(
+            gridData: FlGridData(show: false),
+            titlesData: FlTitlesData(
+              bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: true, getTitlesWidget: (v, meta) {
+                const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+                final idx = v.toInt();
+                if (idx >= 0 && idx < days.length) return Text(days[idx], style: const TextStyle(fontSize: 10));
+                return const SizedBox.shrink();
+              })),
+              leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            ),
+            borderData: FlBorderData(show: false),
+            lineBarsData: [LineChartBarData(spots: const [
+              FlSpot(0, 3),
+              FlSpot(1, 4.5),
+              FlSpot(2, 3.7),
+              FlSpot(3, 5.0),
+              FlSpot(4, 6.0),
+              FlSpot(5, 5.4),
+              FlSpot(6, 6.8),
+            ], isCurved: true, color: Colors.deepPurple, belowBarData: BarAreaData(show: true, color: Colors.deepPurple.withOpacity(0.08)))]
+          ))),
+        ]),
+      ),
+    );
+  }
+
+  Widget _dailyStatsCard() {
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(children: const [Icon(Icons.insights), SizedBox(width: 8), Text("Today's Quick Stats", style: TextStyle(fontWeight: FontWeight.bold))]),
+          const SizedBox(height: 8),
+          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+            _tinyStat("Steps", "6,542", Icons.directions_walk),
+            _tinyStat("Calories", "1,850", Icons.local_fire_department),
+            _tinyStat("Sleep", "7h 20m", Icons.bedtime),
+          ]),
+          const SizedBox(height: 8),
+          Align(alignment: Alignment.centerRight, child: TextButton(onPressed: () => _openScreenByKey("today"), child: const Text("View details"))),
+        ]),
+      ),
+    );
+  }
+
+  Widget _tinyStat(String title, String value, IconData icon) {
+    return Column(children: [
+      CircleAvatar(backgroundColor: Colors.deepPurple.shade50, child: Icon(icon, color: Colors.deepPurple, size: 18)),
+      const SizedBox(height: 6),
+      Text(value, style: const TextStyle(fontWeight: FontWeight.bold)),
+      const SizedBox(height: 2),
+      Text(title, style: const TextStyle(fontSize: 12, color: Colors.black54)),
+    ]);
+  }
+
+  Widget _communityCard() {
+    final List<Map<String, Object>> challenges = [
+      {'title': "10k Steps", 'desc': "Daily 10,000 steps", 'participants': 52, 'joined': true},
+      {'title': "7-Day Mindful", 'desc': "Daily meditation", 'participants': 32, 'joined': false},
+    ];
+
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      color: Colors.deepPurple.shade50,
+      elevation: 1,
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(children: const [Icon(Icons.group), SizedBox(width: 8), Text("Community Challenges", style: TextStyle(fontWeight: FontWeight.bold))]),
+          const SizedBox(height: 8),
+          ...challenges.map((c) {
+            final joined = c['joined'] as bool;
+            return ListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(c['title'] as String),
+              subtitle: Text("${c['desc']} • ${c['participants']} participants"),
+              trailing: ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: joined ? Colors.green : Colors.deepPurple),
+                onPressed: () {},
+                child: Text(joined ? "Joined" : "Join"),
+              ),
+            );
+          }).toList(),
+          Align(alignment: Alignment.centerRight, child: TextButton(onPressed: () {}, child: const Text("Explore community"))),
         ]),
       ),
     );
