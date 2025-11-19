@@ -24,7 +24,7 @@ class _FocusScreenState extends State<FocusScreen> {
   bool _isRunning = false;
   bool _isWorkPhase = true;
   int _completedSessions = 0;
-  bool _autoStartNext = true;
+  final bool _autoStartNext = true;
 
   // Tracking data
   Map<String, int> _dailyFocusSeconds = {};
@@ -126,8 +126,11 @@ class _FocusScreenState extends State<FocusScreen> {
       _secondsRemaining = workSeconds;
     }
 
-    if (_autoStartNext) _startTimer();
-    else setState(() {});
+    if (_autoStartNext) {
+      _startTimer();
+    } else {
+      setState(() {});
+    }
   }
 
   void _addSecond() {

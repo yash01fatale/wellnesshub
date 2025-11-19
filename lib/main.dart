@@ -5,7 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 import 'firebase_options.dart';
 
-// Screens
+// Core Screens
 import 'screens/login_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/dashboard_screen.dart';
@@ -19,7 +19,13 @@ import 'screens/profile_screen.dart';
 import 'screens/habit_tracker_screen.dart';
 import 'screens/daily_stats_screen.dart';
 import 'screens/ai_chat_screen.dart';
-import 'screens/focus_screen.dart'; 
+import 'screens/focus_screen.dart';
+import 'screens/disease_prediction_screen.dart';
+
+// NEW SCREENS
+import 'screens/addiction_recovery_screen.dart';
+import 'screens/women_wellness_screen.dart';
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
@@ -32,30 +38,37 @@ class WellnessHubApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'WellnessHub',
       debugShowCheckedModeBanner: false,
+      title: 'WellnessHub',
       theme: ThemeData(
         primarySwatch: Colors.deepPurple,
-        useMaterial3: false,
+        brightness: Brightness.light,
       ),
-      // Use named routes for clarity
-      initialRoute: '/',
-      routes: {
-  '/': (_) => const AuthWrapper(),
-  '/home': (_) => const HomeScreen(),
-  '/focus': (_) => const FocusScreen(),
-  '/nutrition': (_) => const NutritionScreen(),
-  '/fitness': (_) => const FitnessScreen(),
-  '/sleep': (_) => const SleepScreen(),
-  '/mental': (_) => const MentalScreen(),
-  '/spirituality': (_) => const SpiritualityScreen(),
-  '/habits': (_) => const HabitsScreen(),
-  '/dashboard': (_) => const DashboardScreen(),
-  '/daily-stats': (_) => const DailyStatsScreen(),
-  '/assistant': (_) => const AIChatScreen(),
-  '/profile': (_) => const ProfileScreen(),
-},
 
+      // -------------------- ROUTES --------------------
+      routes: {
+        '/home': (_) => const HomeScreen(),
+        '/dashboard': (_) => const DashboardScreen(),
+        '/nutrition': (_) => const NutritionScreen(),
+        '/fitness': (_) => const FitnessScreen(),
+        '/sleep': (_) => const SleepScreen(),
+        '/mental': (_) => const MentalScreen(),
+        '/spirituality': (_) => const SpiritualityScreen(),
+        '/habits': (_) => const HabitsScreen(),
+        '/habit-tracker': (_) => const HabitTrackerScreen(),
+        '/daily-stats': (_) => const DailyStatsScreen(),
+        '/assistant': (_) => const AIChatScreen(),
+        '/focus': (_) => const FocusScreen(),
+        '/prediction': (_) => const DiseasePredictionScreen(),
+        '/profile': (_) => const ProfileScreen(),
+        '/login': (_) => const LoginScreen(),
+
+        // NEW ROUTES
+        '/addiction': (_) => const AddictionRecoveryScreen(),
+        '/women-wellness': (_) => const WomenWellnessScreen(),
+      },
+
+      home: const AuthWrapper(),
     );
   }
 }
@@ -65,22 +78,16 @@ class AuthWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // StreamBuilder ensures correct state after hot-reload and avoids instant navigation issues.
     return StreamBuilder<User?>(
       stream: FirebaseAuth.instance.authStateChanges(),
-      builder: (context, snapshot) {
-        // Still connecting to Firebase auth
-        if (snapshot.connectionState == ConnectionState.waiting) {
+      builder: (context, snap) {
+        if (snap.connectionState == ConnectionState.waiting) {
           return const Scaffold(body: Center(child: CircularProgressIndicator()));
         }
-
-        if (snapshot.hasData) {
-          // If user is logged in show HomeScreen (primary hub)
+        if (snap.hasData) {
           return const HomeScreen();
-        } else {
-          // Not logged in -> LoginScreen
-          return const LoginScreen();
         }
+        return const LoginScreen();
       },
     );
   }
