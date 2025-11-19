@@ -699,7 +699,7 @@ class _WomenWellnessScreenState extends State<WomenWellnessScreen>
                       _openDayEditor(DateTime.parse(k));
                     }),
               );
-            }).toList(),
+            }),
           ])),
     );
   }
@@ -1004,7 +1004,11 @@ class _FullScreenDayEditorState extends State<FullScreenDayEditor> {
                     selectedColor: Colors.pink.shade100,
                     onSelected: (v) {
                       setState(() {
-                        if (v) _pickedSymptoms.add(s); else _pickedSymptoms.remove(s);
+                        if (v) {
+                          _pickedSymptoms.add(s);
+                        } else {
+                          _pickedSymptoms.remove(s);
+                        }
                       });
                     },
                   );
@@ -1073,12 +1077,12 @@ class _FullScreenDayEditorState extends State<FullScreenDayEditor> {
             const SizedBox(width: 12),
             OutlinedButton(
               onPressed: _onDelete,
+              style: OutlinedButton.styleFrom(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
               child: const Padding(
                 padding: EdgeInsets.symmetric(vertical: 14, horizontal: 8),
                 child: Text("Delete"),
-              ),
-              style: OutlinedButton.styleFrom(
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
             )
           ]),

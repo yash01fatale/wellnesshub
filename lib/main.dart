@@ -1,11 +1,17 @@
 // lib/main.dart
+
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:provider/provider.dart';
 
 import 'firebase_options.dart';
 
-// Core Screens
+// THEME FILES
+import 'screens/theme/theme.dart';
+import 'screens/theme/theme_notifier.dart';
+
+// SCREENS
 import 'screens/login_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/dashboard_screen.dart';
@@ -21,15 +27,21 @@ import 'screens/daily_stats_screen.dart';
 import 'screens/ai_chat_screen.dart';
 import 'screens/focus_screen.dart';
 import 'screens/disease_prediction_screen.dart';
-
-// NEW SCREENS
 import 'screens/addiction_recovery_screen.dart';
 import 'screens/women_wellness_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  runApp(const WellnessHubApp());
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => ThemeNotifier(),
+      child: const WellnessHubApp(),
+    ),
+  );
 }
 
 class WellnessHubApp extends StatelessWidget {
@@ -37,15 +49,18 @@ class WellnessHubApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Provider.of<ThemeNotifier>(context);
+
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'WellnessHub',
-      theme: ThemeData(
-        primarySwatch: Colors.deepPurple,
-        brightness: Brightness.light,
-      ),
 
-      // -------------------- ROUTES --------------------
+      // THEME SUPPORT
+      theme: AppTheme.light,
+      darkTheme: AppTheme.dark,
+      themeMode: theme.currentMode, // AUTO SWITCH
+
+      // ROUTES
       routes: {
         '/home': (_) => const HomeScreen(),
         '/dashboard': (_) => const DashboardScreen(),
@@ -63,7 +78,7 @@ class WellnessHubApp extends StatelessWidget {
         '/profile': (_) => const ProfileScreen(),
         '/login': (_) => const LoginScreen(),
 
-        // NEW ROUTES
+        // NEW
         '/addiction': (_) => const AddictionRecoveryScreen(),
         '/women-wellness': (_) => const WomenWellnessScreen(),
       },
@@ -82,7 +97,9 @@ class AuthWrapper extends StatelessWidget {
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snap) {
         if (snap.connectionState == ConnectionState.waiting) {
-          return const Scaffold(body: Center(child: CircularProgressIndicator()));
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
         }
         if (snap.hasData) {
           return const HomeScreen();

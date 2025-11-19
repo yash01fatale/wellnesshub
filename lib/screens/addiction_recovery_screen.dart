@@ -364,7 +364,7 @@ class _AddictionRecoveryScreenState extends State<AddictionRecoveryScreen> {
                     title: Text(t["title"] as String,
                         style: TextStyle(decoration: (t["done"] as bool) ? TextDecoration.lineThrough : null)),
                   );
-                }).toList(),
+                }),
                 const SizedBox(height: 8),
                 Row(children: [
                   ElevatedButton.icon(
