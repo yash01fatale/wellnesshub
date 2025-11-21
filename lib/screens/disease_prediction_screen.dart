@@ -57,7 +57,7 @@ class DiseasePredictionScreen extends StatelessWidget {
           Text(
             "Early Detection Matters 🧬",
             style: TextStyle(
-                color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+                color: Color.fromARGB(255, 255, 255, 255), fontSize: 20, fontWeight: FontWeight.bold),
           ),
           SizedBox(height: 12),
           Text(

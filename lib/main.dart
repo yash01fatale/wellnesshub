@@ -20,7 +20,7 @@ import 'screens/fitness_screen.dart';
 import 'screens/sleep_screen.dart';
 import 'screens/mental_screen.dart';
 import 'screens/spirituality_screen.dart';
-import 'screens/habits_screen.dart';
+import 'screens/habits_screen.dart' hide HomeScreen;
 import 'screens/profile_screen.dart';
 import 'screens/habit_tracker_screen.dart';
 import 'screens/daily_stats_screen.dart';
